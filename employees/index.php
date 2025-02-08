@@ -9,22 +9,33 @@ require_once "../config/database.php";
 $database = new Database();
 $db = $database->getConnection();
 
-// Fetch employees with department and position info
-$query = "SELECT 
-    e.emp_id, e.nik, e.full_name, e.email,
-    d.dept_name, p.position_name
-    FROM employees e
-    LEFT JOIN departments d ON e.dept_id = d.dept_id
-    LEFT JOIN positions p ON e.position_id = p.position_id
-    ORDER BY e.emp_id DESC";
+// Get all departments and positions for filter dropdowns
+$dept_query = "SELECT * FROM departments ORDER BY dept_name";
+$pos_query = "SELECT * FROM positions ORDER BY position_name";
 
+$dept_stmt = $db->prepare($dept_query);
+$pos_stmt = $db->prepare($pos_query);
+
+$dept_stmt->execute();
+$pos_stmt->execute();
+
+$departments = $dept_stmt->fetchAll(PDO::FETCH_ASSOC);
+$positions = $pos_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Prepare parameters for stored procedure
+$search_term = !empty($_GET['search']) ? $_GET['search'] : null;
+$dept_id = !empty($_GET['department']) ? $_GET['department'] : null;
+$position_id = !empty($_GET['position']) ? $_GET['position'] : null;
+
+// Call stored procedure
+$query = "CALL sp_search_employees(?, ?, ?)";
 $stmt = $db->prepare($query);
-$stmt->execute();
+$stmt->execute([$search_term, $dept_id, $position_id]);
 $employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 ?>
 
 <!DOCTYPE html>
-<!-- Sisanya tetap sama seperti kode Anda -->
 <html>
 <head>
     <title>Employees - Sistem Kepegawaian</title>
@@ -47,6 +58,43 @@ $employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <a href="create.php" class="btn btn-primary">Tambah Pegawai</a>
         </div>
 
+        <!-- Search and Filter Form -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" name="search" class="form-control" placeholder="Cari NIK, Nama, atau Email" 
+                               value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+                    </div>
+                    <div class="col-md-3">
+                        <select name="department" class="form-control">
+                            <option value="">Pilih Departemen</option>
+                            <?php foreach ($departments as $dept): ?>
+                                <option value="<?php echo $dept['dept_id']; ?>"
+                                    <?php echo (isset($_GET['department']) && $_GET['department'] == $dept['dept_id']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($dept['dept_name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="position" class="form-control">
+                            <option value="">Pilih Jabatan</option>
+                            <?php foreach ($positions as $pos): ?>
+                                <option value="<?php echo $pos['position_id']; ?>"
+                                    <?php echo (isset($_GET['position']) && $_GET['position'] == $pos['position_id']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($pos['position_name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Cari</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <div class="table-responsive">
             <table class="table table-striped">
                 <thead>
@@ -60,22 +108,28 @@ $employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($employees as $employee): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($employee['nik']); ?></td>
-                        <td><?php echo htmlspecialchars($employee['full_name']); ?></td>
-                        <td><?php echo htmlspecialchars($employee['email']); ?></td>
-                        <td><?php echo htmlspecialchars($employee['dept_name']); ?></td>
-                        <td><?php echo htmlspecialchars($employee['position_name']); ?></td>
-                        <td>
-                            <a href="view.php?id=<?php echo $employee['emp_id']; ?>" class="btn btn-sm btn-info">View</a>
-                            <a href="edit.php?id=<?php echo $employee['emp_id']; ?>" class="btn btn-sm btn-warning">Edit</a>
-                            <a href="delete.php?id=<?php echo $employee['emp_id']; ?>" 
-                               class="btn btn-sm btn-danger"
-                               onclick="return confirm('Are you sure?')">Delete</a>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
+                    <?php if (count($employees) > 0): ?>
+                        <?php foreach ($employees as $employee): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($employee['nik']); ?></td>
+                            <td><?php echo htmlspecialchars($employee['full_name']); ?></td>
+                            <td><?php echo htmlspecialchars($employee['email']); ?></td>
+                            <td><?php echo htmlspecialchars($employee['dept_name']); ?></td>
+                            <td><?php echo htmlspecialchars($employee['position_name']); ?></td>
+                            <td>
+                                <a href="view.php?id=<?php echo $employee['emp_id']; ?>" class="btn btn-sm btn-info">View</a>
+                                <a href="edit.php?id=<?php echo $employee['emp_id']; ?>" class="btn btn-sm btn-warning">Edit</a>
+                                <a href="delete.php?id=<?php echo $employee['emp_id']; ?>" 
+                                   class="btn btn-sm btn-danger"
+                                   onclick="return confirm('Are you sure?')">Delete</a>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="6" class="text-center">Tidak ada data yang ditemukan</td>
+                        </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
