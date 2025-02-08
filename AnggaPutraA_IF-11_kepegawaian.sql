@@ -66,7 +66,7 @@ CREATE TABLE `employees` (
   KEY `position_id` (`position_id`),
   CONSTRAINT `employees_ibfk_1` FOREIGN KEY (`dept_id`) REFERENCES `departments` (`dept_id`),
   CONSTRAINT `employees_ibfk_2` FOREIGN KEY (`position_id`) REFERENCES `positions` (`position_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -75,7 +75,7 @@ CREATE TABLE `employees` (
 
 LOCK TABLES `employees` WRITE;
 /*!40000 ALTER TABLE `employees` DISABLE KEYS */;
-INSERT INTO `employees` VALUES (1,'3306091703040004','Angga Putra Alghoniyyu','angga.10122398@mahasiswa.unikom.ac.id','2000-01-17','2022-02-07',3,3,20000000.00,'2025-02-07 17:59:34','2025-02-08 04:06:46');
+INSERT INTO `employees` VALUES (2,'3306091703041001','Budi Santoso','budi.santoso@email.com','1992-05-14','2020-03-10',1,2,15000000.00,'2025-02-08 08:43:26','2025-02-08 08:43:26'),(3,'3306091703041002','Siti Aminah','siti.aminah@email.com','1995-09-23','2019-06-21',2,1,8000000.00,'2025-02-08 08:43:26','2025-02-08 08:43:26'),(4,'3306091703041003','Rizky Pratama','rizky.pratama@email.com','1998-02-10','2021-01-15',3,3,20000000.00,'2025-02-08 08:43:26','2025-02-08 08:43:26'),(5,'3306091703041004','Dewi Lestari','dewi.lestari@email.com','1994-07-30','2018-11-20',4,2,15000000.00,'2025-02-08 08:43:26','2025-02-08 08:43:26'),(6,'3306091703041005','Andi Wijaya','andi.wijaya@email.com','1990-12-05','2017-04-25',2,3,18000000.00,'2025-02-08 08:43:26','2025-02-08 08:43:26'),(7,'3306091703041006','Nina Rahmawati','nina.rahmawati@email.com','1996-06-18','2022-07-08',1,1,8000000.00,'2025-02-08 08:43:26','2025-02-08 08:43:26'),(8,'3306091703041007','Agus Saputra','agus.saputra@email.com','1993-03-22','2016-09-12',3,2,15000000.00,'2025-02-08 08:43:26','2025-02-08 08:43:26'),(9,'3306091703041008','Lisa Marlina','lisa.marlina@email.com','1997-11-01','2023-02-28',4,3,21000000.00,'2025-02-08 08:43:26','2025-02-08 08:43:26'),(10,'3306091703041009','Doni Prasetyo','doni.prasetyo@email.com','1991-08-15','2015-05-05',2,1,8000000.00,'2025-02-08 08:43:26','2025-02-08 08:43:26'),(11,'3306091703041010','Fitri Handayani','fitri.handayani@email.com','1999-04-10','2020-12-11',1,2,15000000.00,'2025-02-08 08:43:26','2025-02-08 08:43:26');
 /*!40000 ALTER TABLE `employees` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -87,24 +87,42 @@ UNLOCK TABLES;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'NO_ZERO_IN_DATE,NO_ZERO_DATE,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER before_employee_insert
-BEFORE INSERT ON employees
-FOR EACH ROW
-BEGIN
-    -- Validate salary within position range
-    DECLARE min_salary DECIMAL(15,2);
-    DECLARE max_salary DECIMAL(15,2);
-    
-    SELECT salary_range_min, salary_range_max 
-    INTO min_salary, max_salary
-    FROM positions 
-    WHERE position_id = NEW.position_id;
-    
-    IF NEW.salary < min_salary THEN
-        SET NEW.salary = min_salary;
-    ELSEIF NEW.salary > max_salary THEN
-        SET NEW.salary = max_salary;
-    END IF;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER before_employee_insert
+
+BEFORE INSERT ON employees
+
+FOR EACH ROW
+
+BEGIN
+
+    -- Validate salary within position range
+
+    DECLARE min_salary DECIMAL(15,2);
+
+    DECLARE max_salary DECIMAL(15,2);
+
+    
+
+    SELECT salary_range_min, salary_range_max 
+
+    INTO min_salary, max_salary
+
+    FROM positions 
+
+    WHERE position_id = NEW.position_id;
+
+    
+
+    IF NEW.salary < min_salary THEN
+
+        SET NEW.salary = min_salary;
+
+    ELSEIF NEW.salary > max_salary THEN
+
+        SET NEW.salary = max_salary;
+
+    END IF;
+
 END */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -176,4 +194,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-02-08 14:01:43
+-- Dump completed on 2025-02-08 15:45:46
